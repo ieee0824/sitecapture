@@ -1,0 +1,25 @@
+{
+  "name": "sitecapture",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ieee0824/sitecapture.git"
+  },
+  "author": "ieee0824",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ieee0824/sitecapture/issues"
+  },
+  "homepage": "https://github.com/ieee0824/sitecapture#readme",
+  "dependencies": {
+    "webshot": "^0.18.0"
+  },
+  "devDependencies": {
+    "webshot": "^0.18.0"
+  }
+}
