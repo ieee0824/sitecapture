@@ -1,9 +1,9 @@
 var webshot = require('webshot');
-var async = require('async');
 var fs = require('fs');
 var ARGV = require('argv');
 var AWS = require('aws-sdk');
 var crypto = require('crypto');
+var async = require('async');
 
 const URL = require('url');
 
@@ -59,6 +59,20 @@ var argsOptions = [
         type: 'string',
         description: 'queue url',
         example: '--queue_url https://foobarbaz.com'
+    },
+    {
+        name: 's3_bucket_name',
+	short: "bucket",
+        type: 'string',
+        description: 's3 bucket name',
+        example: '-bucket hogehoge_bucket'
+    },
+    {
+        name: 'path',
+	short: "path",
+        type: 'string',
+        description: 'save path',
+        example: '-path sitecapture/hogehoge'
     }
 ];
 
@@ -90,20 +104,28 @@ const OPTIONS = {
     defaultWhiteBackground: true
 };
 
+const S3_BUCKET = function(args){
+    if (args.s3_bucket_name == null) {
+	console.log("no input s3 bucket name.");
+	process.exit()
+    }
+    return args.s3_bucket_name;
+}(args);
+
+const UPLOAD_PATH = function(args){
+    if (args.path == null) {
+	return "";
+    }
+    return args.path + "/";
+}(args);
+
 
 main(args);
 
 function main(args){
-    /*
-    if (args.input_src == null) {
-	if (args.src == null) {
-	    console.log("no inputs");
-	}
-        capture(args.src, ".", OPTIONS);
-    }
-    */
     getURLsFromAamazonSQS(args, "./img", OPTIONS);
 }
+
 
 function getSQSClient(args){
     if (args.queue_url == null) {
@@ -173,41 +195,56 @@ function deleteSQSMessage(args, receiptHandle) {
 
 function capture(srcs, output_dir, options) {
     if (!isJson(srcs)) {
-	var out = getHost(srcs)+".png";
-	var done = 0;
-	if (out == "null.png") {
-	    out = srcs + ".png";
-	}
-        webshot(srcs, output_dir + "/" + out, options, function(err) {
-	});
-	return;
+	console.log("illegal format. please json format.");
+	process.exit();
     }
     var urls = JSON.parse(srcs);
-    async.eachLimit(urls, 4, function(v, next) {
+    async.eachLimit(urls, 2, function(v, next) {
         var out = getHost(v.url);
         if (out == "null") {
             out = v.url;
         }
 	var renderStream = webshot(v.url, options);
-	var file = fs.createWriteStream(output_dir + "/" + getHash(v.url), {encoding: 'binary'});
+	var file = fs.createWriteStream("img/" + getHash(v.url), {encoding: 'binary'});
 	renderStream.on('data', function(data) {
 	    file.write(data.toString('binary'), 'binary');
 	})
 	.on('error', function(e){
 	    console.log(e);
-            //next(null, v.url);
 	})
 	.on('end', function(){
-	    console.log(v.url, "done");
-            next(null, v.url);
+    	    var s3 = new AWS.S3({
+	        params: {
+		    Bucket: S3_BUCKET,
+		    Key: UPLOAD_PATH + encodeBase64(v.url)
+	        }
+	    });
+	    s3.upload({
+	        Body: fs.createReadStream(file.path)
+	    }, 
+	    function(err, data) {
+	        if(err)console.log(err);
+		fs.unlink(file.path, function(err) {
+		    if (err) console.log(err);
+		    else console.log(file.path, "is delete");
+                    next(null, v.url);
+		});
+	    });
 	});
     });
 }
+
+
 
 function getHash(str){
     var sha512 = crypto.createHash('sha512');
     sha512.update(str);
     return sha512.digest('hex');
+}
+
+function encodeBase64(str) {
+    var b = new Buffer(str);
+    return b.toString('base64');
 }
 
 function getHost(url) {
