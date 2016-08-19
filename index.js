@@ -73,6 +73,12 @@ var argsOptions = [
         type: 'string',
         description: 'save path',
         example: '-path sitecapture/hogehoge'
+    },
+    {
+        name: 'tmp',
+        type: 'string',
+        description: 'tmp directory path',
+        example: '-t temppath'
     }
 ];
 
@@ -94,6 +100,12 @@ const SCREEN_SIZE = function(){
     return {width: size[0], height: size[1]};
 }();
 
+const TEMP_PATH = function(args){
+    if (args.tmp == null) {
+	return "/tmp";
+    }
+    return args.tmp;
+}(args)
 
 
 const OPTIONS = {
@@ -205,7 +217,7 @@ function capture(srcs, output_dir, options) {
             out = v.url;
         }
 	var renderStream = webshot(v.url, options);
-	var file = fs.createWriteStream("img/" + getHash(v.url), {encoding: 'binary'});
+	var file = fs.createWriteStream(TEMP_PATH + "/" + getHash(v.url), {encoding: 'binary'});
 	renderStream.on('data', function(data) {
 	    file.write(data.toString('binary'), 'binary');
 	})
