@@ -11,6 +11,11 @@
 ]
 ```
 
+## セットアップ
+```
+$ npm install
+```
+
 ## 実行方法
 ```
 % node index.js --queue_url=https://sqs.${REGION}.amazonaws.com/${AWS_UID}/${SQS_QUEUE_NAME} --aws_access_key_id=${ACCESS_KEY} --aws_secret_access_key_id=${SECRET_KEY} --s3_bucket_name=${S3_BUCKET_NAME} --path=${S3_PATH} --tmp=${WORKE_DIR}
