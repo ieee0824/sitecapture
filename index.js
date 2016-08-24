@@ -238,7 +238,7 @@ function capture(srcs, output_dir, options) {
 	        if(err)console.log(err);
 		fs.unlink(file.path, function(err) {
 		    if (err) console.log(err);
-		    else console.log(file.path, "is delete");
+		    else console.log(v.url, "is complete");
                     next(null, v.url);
 		});
 	    });
