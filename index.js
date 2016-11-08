@@ -7,80 +7,68 @@ var async = require('async');
 
 const URL = require('url');
 
-var argsOptions = [
-    {
-        name: 'input_src',
-        short: 'insrc',
-        type: 'string',
-        description: 'json を受け渡す入力ソース',
-        example: '-insrc file or --input_src=file, src type: "file, Amazon SQS"'
-    },
-    {
-	name: 'screen_size',
-	short: 'ss',
-	type: 'string',
-	description: 'スクショを撮る時の大きさ',
-	example: '-ss 1024x768 or --screen_size=1024x768'
-    },
-    {
-	name: 'src',
-	short: 's',
-	type: 'string',
-	description: 'スクショ取りたいURL',
-	example: '-s http://example.com or --src=http://example.com formatはjsonでも良い[{"url":"http://example.com","option":{}}]'
-    },
-    {
-        name: 'profile',
-        short: 'p',
-        type: 'string',
-        description: 'credentialsに書いてる奴',
-        example: '-p dev/developer'
-    },
-    {
-        name: 'aws_access_key_id',
-        type: 'string',
-        description: 'aws access key id',
-        example: '--aws_access_key_id ...'
-    },
-    {
-        name: 'aws_secret_access_key_id',
-        type: 'string',
-        description: 'aws secret access key id',
-        example: '--aws_secret_access_key_id ...'
-    },
-    {
-        name: 'region',
-        type: 'string',
-        description: 'aws region',
-        example: '--region ap-northeast-1'
-    },
-    {
-        name: 'queue_url',
-        type: 'string',
-        description: 'queue url',
-        example: '--queue_url https://foobarbaz.com'
-    },
-    {
-        name: 's3_bucket_name',
-	short: "bucket",
-        type: 'string',
-        description: 's3 bucket name',
-        example: '-bucket hogehoge_bucket'
-    },
-    {
-        name: 'path',
-	short: "path",
-        type: 'string',
-        description: 'save path',
-        example: '-path sitecapture/hogehoge'
-    },
-    {
-        name: 'tmp',
-        type: 'string',
-        description: 'tmp directory path',
-        example: '-t temppath'
-    }
-];
+var argsOptions = [{
+    name: 'input_src',
+    short: 'insrc',
+    type: 'string',
+    description: 'json を受け渡す入力ソース',
+    example: '-insrc file or --input_src=file, src type: "file, Amazon SQS"'
+}, {
+    name: 'screen_size',
+    short: 'ss',
+    type: 'string',
+    description: 'スクショを撮る時の大きさ',
+    example: '-ss 1024x768 or --screen_size=1024x768'
+}, {
+    name: 'src',
+    short: 's',
+    type: 'string',
+    description: 'スクショ取りたいURL',
+    example: '-s http://example.com or --src=http://example.com formatはjsonでも良い[{"url":"http://example.com","option":{}}]'
+}, {
+    name: 'profile',
+    short: 'p',
+    type: 'string',
+    description: 'credentialsに書いてる奴',
+    example: '-p dev/developer'
+}, {
+    name: 'aws_access_key_id',
+    type: 'string',
+    description: 'aws access key id',
+    example: '--aws_access_key_id ...'
+}, {
+    name: 'aws_secret_access_key_id',
+    type: 'string',
+    description: 'aws secret access key id',
+    example: '--aws_secret_access_key_id ...'
+}, {
+    name: 'region',
+    type: 'string',
+    description: 'aws region',
+    example: '--region ap-northeast-1'
+}, {
+    name: 'queue_url',
+    type: 'string',
+    description: 'queue url',
+    example: '--queue_url https://foobarbaz.com'
+}, {
+    name: 's3_bucket_name',
+    short: "bucket",
+    type: 'string',
+    description: 's3 bucket name',
+    example: '-bucket hogehoge_bucket'
+}, {
+    name: 'path',
+    short: "path",
+    type: 'string',
+    description: 'save path',
+    example: '-path sitecapture/hogehoge'
+}, {
+    name: 'tmp',
+    type: 'string',
+    description: 'tmp directory path',
+    example: '-t temppath'
+}];
 
 ARGV.option(argsOptions);
 const args = ARGV.run().options;
@@ -89,20 +77,23 @@ const DEFAULT_SCREEN_SIZE = {
     height: 768
 };
 
-const SCREEN_SIZE = function(){
+const SCREEN_SIZE = function() {
     if (args.screen_size == null) {
-	return DEFAULT_SCREEN_SIZE;
+        return DEFAULT_SCREEN_SIZE;
     }
     const size = args.screen_size.split("x");
     if (size.length != 2) {
-	return DEFAULT_SCREEN_SIZE;
+        return DEFAULT_SCREEN_SIZE;
     }
-    return {width: size[0], height: size[1]};
+    return {
+        width: size[0],
+        height: size[1]
+    };
 }();
 
-const TEMP_PATH = function(args){
+const TEMP_PATH = function(args) {
     if (args.tmp == null) {
-	return "/tmp";
+        return "/tmp";
     }
     return args.tmp;
 }(args)
@@ -113,20 +104,21 @@ const OPTIONS = {
     screenSize: SCREEN_SIZE,
     shotSize: SCREEN_SIZE,
     streamType: 'png',
-    defaultWhiteBackground: true
+    defaultWhiteBackground: true,
+    renderDelay: 5000
 };
 
-const S3_BUCKET = function(args){
+const S3_BUCKET = function(args) {
     if (args.s3_bucket_name == null) {
-	console.log("no input s3 bucket name.");
-	process.exit()
+        console.log("no input s3 bucket name.");
+        process.exit()
     }
     return args.s3_bucket_name;
 }(args);
 
-const UPLOAD_PATH = function(args){
+const UPLOAD_PATH = function(args) {
     if (args.path == null) {
-	return "";
+        return "";
     }
     return args.path + "/";
 }(args);
@@ -134,60 +126,65 @@ const UPLOAD_PATH = function(args){
 
 main(args);
 
-function main(args){
+function main(args) {
     getURLsFromAamazonSQS(args, "./img", OPTIONS);
 }
 
 
-function getSQSClient(args){
+function getSQSClient(args) {
     if (args.queue_url == null) {
-	console.log("no queue url");
-	process.exit();
+        console.log("no queue url");
+        process.exit();
     }
 
     if (args.profile != null) {
-	var credentials = new AWS.SharedIniFileCredentials(
-		{
-		    profile: function(p){
-			if (p = "") {
-			    return "default";
-			}
-			return p;
-		    }(args.profile)
-		}
-	);
-	AWS.config.credentials = credentials;
+        var credentials = new AWS.SharedIniFileCredentials({
+            profile: function(p) {
+                if (p = "") {
+                    return "default";
+                }
+                return p;
+            }(args.profile)
+        });
+        AWS.config.credentials = credentials;
     } else if (args.aws_access_key_id != null && args.aws_secret_access_key_id != null) {
-	AWS.config.update({accessKeyId: args.aws_access_key_id, secretAccessKey: args.aws_secret_access_key_id});
+        AWS.config.update({
+            accessKeyId: args.aws_access_key_id,
+            secretAccessKey: args.aws_secret_access_key_id
+        });
     }
 
     var sqs;
     if (args.region == null) {
-	sqs = new AWS.SQS({region:'ap-northeast-1'});
+        sqs = new AWS.SQS({
+            region: 'ap-northeast-1'
+        });
     } else {
-        sqs = new AWS.SQS({region: args.region});
+        sqs = new AWS.SQS({
+            region: args.region
+        });
     }
     return sqs;
 }
 
 
-function getURLsFromAamazonSQS(args, output_dir, options){
+function getURLsFromAamazonSQS(args, output_dir, options) {
     var sqs = getSQSClient(args);
     var sqsParamsReceive = {
-	QueueUrl: args.queue_url,
-	WaitTimeSeconds: 20,
-	MaxNumberOfMessages: 10
+        QueueUrl: args.queue_url,
+        WaitTimeSeconds: 20,
+        MaxNumberOfMessages: 10
     };
     sqs.receiveMessage(sqsParamsReceive, function(err, data) {
-	if (err) {
-	    console.log(err, err.stack);
-	    process.exit();
-	}
-	data.Messages.forEach(function(v, i, arr){
+        if (err) {
+            console.log(err, err.stack);
+            process.exit();
+        }
+        data.Messages.forEach(function(v, i, arr) {
             deleteSQSMessage(args, v.ReceiptHandle)
-	});
-        data.Messages.forEach(function(v, i, arr){
-	    capture(v.Body, output_dir, options)
+        });
+        data.Messages.forEach(function(v, i, arr) {
+            capture(v.Body, output_dir, options)
         });
     });
 }
@@ -195,20 +192,20 @@ function getURLsFromAamazonSQS(args, output_dir, options){
 function deleteSQSMessage(args, receiptHandle) {
     var sqs = getSQSClient(args);
     var params = {
-	QueueUrl: args.queue_url,
-	ReceiptHandle: receiptHandle
+        QueueUrl: args.queue_url,
+        ReceiptHandle: receiptHandle
     }
     sqs.deleteMessage(params, function(err, data) {
-	if (err) {
-	    console.log(err, err.stack);
-	}
+        if (err) {
+            console.log(err, err.stack);
+        }
     });
 }
 
 function capture(srcs, output_dir, options) {
     if (!isJson(srcs)) {
-	console.log("illegal format. please json format.");
-	process.exit();
+        console.log("illegal format. please json format.");
+        process.exit();
     }
     var urls = JSON.parse(srcs);
     async.eachLimit(urls, 2, function(v, next) {
@@ -216,39 +213,42 @@ function capture(srcs, output_dir, options) {
         if (out == "null") {
             out = v.url;
         }
-	var renderStream = webshot(v.url, options);
-	var file = fs.createWriteStream(TEMP_PATH + "/" + getHash(v.url), {encoding: 'binary'});
-	renderStream.on('data', function(data) {
-	    file.write(data.toString('binary'), 'binary');
-	})
-	.on('error', function(e){
-	    console.log(e);
-	})
-	.on('end', function(){
-    	    var s3 = new AWS.S3({
-	        params: {
-		    Bucket: S3_BUCKET,
-		    Key: UPLOAD_PATH + encodeBase64(v.url)
-	        }
-	    });
-	    s3.upload({
-	        Body: fs.createReadStream(file.path)
-	    }, 
-	    function(err, data) {
-	        if(err)console.log(err);
-		fs.unlink(file.path, function(err) {
-		    if (err) console.log(err);
-		    else console.log(v.url, "is complete");
-                    next(null, v.url);
-		});
-	    });
-	});
+        console.log(options);
+        var renderStream = webshot(v.url, options);
+        var file = fs.createWriteStream(TEMP_PATH + "/" + getHash(v.url), {
+            encoding: 'binary'
+        });
+        renderStream.on('data', function(data) {
+                file.write(data.toString('binary'), 'binary');
+            })
+            .on('error', function(e) {
+                console.log(e);
+            })
+            .on('end', function() {
+                var s3 = new AWS.S3({
+                    params: {
+                        Bucket: S3_BUCKET,
+                        Key: UPLOAD_PATH + encodeBase64(v.url)
+                    }
+                });
+                s3.upload({
+                        Body: fs.createReadStream(file.path)
+                    },
+                    function(err, data) {
+                        if (err) console.log(err);
+                        fs.unlink(file.path, function(err) {
+                            if (err) console.log(err);
+                            else console.log(v.url, "is complete");
+                            next(null, v.url);
+                        });
+                    });
+            });
     });
 }
 
 
 
-function getHash(str){
+function getHash(str) {
     var sha512 = crypto.createHash('sha512');
     sha512.update(str);
     return sha512.digest('hex');
@@ -265,10 +265,9 @@ function getHost(url) {
 
 function isJson(str) {
     try {
-	JSON.parse(str);
+        JSON.parse(str);
     } catch (e) {
-	return false;
+        return false;
     }
     return true;
 }
-
